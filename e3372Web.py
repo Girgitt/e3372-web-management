@@ -73,16 +73,19 @@ class HuaweiE3372(object):
             'response', None)
 
         if SessionToken is not None:
+            logger.info("using SessionToken")
             Session = SessionToken.get("SesInfo")  # cookie
             Token = SessionToken.get("TokInfo")  # token
             headers = {'Cookie': Session, '__RequestVerificationToken': Token,
                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
         else:
+            logger.info("using token only")
             Token = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/token").text).get('response',
                                                                                                        None).get(
                 "token")
             headers = {'__RequestVerificationToken': Token,
                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        logger.info("returning headers:%s" % headers)
         return headers
 
     def postSMS(self, path, number, text):
