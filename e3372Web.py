@@ -100,7 +100,7 @@ class HuaweiE3372(object):
     def postSMSlist(self, path):
         headers = self.get_request_headers(content_type="text/xml")
         APIurl = self.base_url + path
-        post_data = "<request><PageIndex>1</PageIndex><ReadCount>3</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>1</UnreadPreferred></request>"
+        post_data = "<request><PageIndex>1</PageIndex><ReadCount>100</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>1</UnreadPreferred></request>"
         logging.debug(post_data)
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
 
