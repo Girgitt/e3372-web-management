@@ -63,6 +63,7 @@ class HuaweiE3372(object):
 
     def get(self, path, headers=None):
         try:
+            logging.info("returning GET (raw text):\n%s" % self.session.get(self.base_url + path, headers=headers).text)
             return xmltodict.parse(self.session.get(self.base_url + path, headers=headers).text).get('response', None)
         except:
             logging.exception("could not parse:\n%s" % self.session.get(self.base_url + path, headers=headers).text)
