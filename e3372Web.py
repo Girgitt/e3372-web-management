@@ -65,7 +65,7 @@ class HuaweiE3372(object):
         try:
             return xmltodict.parse(self.session.get(self.base_url + path, headers=headers).text).get('response', None)
         except:
-            logging.exception("ould not parse:\n%s" % self.session.get(self.base_url + path, headers=headers).text)
+            logging.exception("could not parse:\n%s" % self.session.get(self.base_url + path, headers=headers).text)
 
     def get_request_headers(self):
         SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get(
@@ -147,7 +147,7 @@ def sendsms():
 def getsmses():
     try:
         e3372 = HuaweiE3372()
-        path_data = e3372.get("/sms/sms-list", headers=e3372.get_request_headers())
+        path_data = e3372.get("/api/sms/sms-list", headers=e3372.get_request_headers())
         logger.info("Get sms-list successful")
         return jsonify(path_data)
     except:
