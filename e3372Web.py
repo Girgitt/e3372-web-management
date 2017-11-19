@@ -62,7 +62,10 @@ class HuaweiE3372(object):
         r = self.session.get(self.base_url + self.COOKIE_URL)
 
     def get(self, path, headers=None):
-        return xmltodict.parse(self.session.get(self.base_url + path, headers=headers).text).get('response', None)
+        try:
+            return xmltodict.parse(self.session.get(self.base_url + path, headers=headers).text).get('response', None)
+        except:
+            logging.exception("ould not parse:\n%s" % self.session.get(self.base_url + path, headers=headers).text)
 
     def get_request_headers(self):
         SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get(
