@@ -63,7 +63,7 @@ class HuaweiE3372(object):
 
     def get(self, path, headers=None):
         try:
-            logger.info("returning GET (raw text):\n%s" % self.session.get(self.base_url + path, headers=headers).text)
+            logger.debug("returning GET (raw text):\n%s" % self.session.get(self.base_url + path, headers=headers).text)
             return xmltodict.parse(self.session.get(self.base_url + path, headers=headers).text).get('response', None)
         except:
             logger.exception("could not parse:\n%s" % self.session.get(self.base_url + path, headers=headers).text)
@@ -76,17 +76,17 @@ class HuaweiE3372(object):
             content_type = "application/x-www-form-urlencoded; charset=UTF-8"
 
         if SessionToken is not None:
-            logger.info("using SessionToken")
+            logger.debug("using SessionToken")
             Session = SessionToken.get("SesInfo")  # cookie
             Token = SessionToken.get("TokInfo")  # token
             headers = {'Cookie': Session, '__RequestVerificationToken': Token, "Content-Type": content_type}
         else:
-            logger.info("using token only")
+            logger.debug("using token only")
             Token = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/token").text).get('response',
                                                                                                        None).get(
                 "token")
             headers = {'__RequestVerificationToken': Token, "Content-Type": content_type}
-        logger.info("returning headers:%s" % headers)
+        logger.debug("returning headers:%s" % headers)
         return headers
 
     def postSMS(self, path, number, text):
@@ -118,7 +118,7 @@ class HuaweiE3372(object):
         headers = self.get_request_headers()
         APIurl = self.base_url + path
         post_data = "<request><dataswitch>" + dataswitch + "</dataswitch>"
-        print post_data
+        logging.debug(post_data)
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
 
 
@@ -165,22 +165,21 @@ def sendsms():
         return "Unknown error"
 
 
-@app.route('/sms', methods=['GET'])  # get messages
+@app.route('/smslist', methods=['GET'])  # get messages
 def getsmses():
+    max_count = 50
     if request.args.get("max_count") is not None:
         max_count = int(request.args.get("max_count"))
-    else:
-        max_count = 50
-    if request.args.get("ascending_sort") is not None:
-        ascending = bool(request.args.get("ascending_sort"))
-    else:
-        ascending = False
 
+    ascending = False
+    if request.args.get("ascending_sort") is not None:
+        if str(request.args.get("ascending_sort")).upper() in ['1', 'TRUE', 'ON', 'YES']:
+            ascending = True
     try:
         e3372 = HuaweiE3372()
         path_data = e3372.postSMSlist("/api/sms/sms-list", max_count=max_count, ascending_sort=ascending).get('response', {}).get('Messages', {})
-        logger.info("Get /api/sms/sms-list called")
-        logger.info("result:\n%s" % path_data)
+        logger.debug("Get /api/sms/sms-list called")
+        logger.debug("result:\n%s" % path_data)
         return jsonify(path_data)
     except:
         logger.exception("Get sms-list failed")
