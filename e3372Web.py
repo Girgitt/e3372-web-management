@@ -13,7 +13,6 @@ from logging.handlers import RotatingFileHandler
 
 logger = logging.getLogger('my_logger')
 logger.setLevel(logging.INFO)
-logger.propagate = True
 handler = RotatingFileHandler('logs/configlog.log', maxBytes=2000, backupCount=5)
 # create a logging format
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -43,7 +42,7 @@ class HuaweiE3372(object):
     '/api/device/information',
     '/api/device/signal',
     '/api/net/net-mode',
-    # below API would refer to refresh periodly 
+    # below API would refer to refresh periodly
     '/api/monitoring/status',
     '/api/monitoring/check-notifications',
     '/api/monitoring/traffic-statistics',
@@ -52,7 +51,7 @@ class HuaweiE3372(object):
     '/api/net/current-plmn',
   ]
   session = None
-  
+
   def __init__(self,host='192.168.8.1'):
     self.host = host
     self.base_url = self.BASE_URL.format(host=host)
@@ -61,18 +60,23 @@ class HuaweiE3372(object):
 
   def get(self,path):
     return xmltodict.parse(self.session.get(self.base_url + path).text).get('response',None)
-  
-  def postSMS(self,path,number,text):
-    SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get('response',None)
+
+  def postSMS(self, path, number, text):
+    SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get('response', None)
     APIurl = self.base_url + path
-    Session = SessionToken.get("SesInfo")  #cookie
-    Token = SessionToken.get("TokInfo") #token
-    Length = str(len(text))   #text length
-    headers = {'Cookie': Session, '__RequestVerificationToken':Token, "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8"}
-    post_data = "<request><Index>-1</Index><Phones><Phone>"+number+"</Phone></Phones><Sca></Sca><Content>"+text+"</Content><Length>"+Length+"</Length><Reserved>1</Reserved><Date>-1</Date></request>"
-    print post_data   
-    return xmltodict.parse(self.session.post(url=APIurl, data= post_data,headers=headers).text)
-  
+    if SessionToken is not None:
+      Session = SessionToken.get("SesInfo")  # cookie
+      Token = SessionToken.get("TokInfo")  # token
+      headers = {'Cookie': Session, '__RequestVerificationToken': Token, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+    else:
+      Token = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/token").text).get('response', None).get("token")
+      headers = {'__RequestVerificationToken': Token, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+
+    Length = str(len(text))  # text length
+    post_data = "<request><Index>-1</Index><Phones><Phone>" + number + "</Phone></Phones><Sca></Sca><Content>" + text + "</Content><Length>" + Length + "</Length><Reserved>1</Reserved><Date>-1</Date></request>"
+    logging.debug(post_data)
+    return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
+
   def postdataswitch(self,path,dataswitch):
     SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get('response',None)
     APIurl = self.base_url + path
@@ -80,11 +84,11 @@ class HuaweiE3372(object):
     Token = SessionToken.get("TokInfo") #token
     headers = {'Cookie': Session, '__RequestVerificationToken':Token, "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8"}
     post_data = "<request><dataswitch>"+dataswitch+"</dataswitch>"
-    print post_data   
+    print post_data
     return xmltodict.parse(self.session.post(url=APIurl, data= post_data,headers=headers).text)
 
 @app.route("/")
-def mainpage():  
+def mainpage():
     try:
         return render_template('index.html', updatetime = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     except:
