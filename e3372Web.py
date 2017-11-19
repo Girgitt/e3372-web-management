@@ -61,13 +61,13 @@ class HuaweiE3372(object):
         self.session = requests.Session()
         r = self.session.get(self.base_url + self.COOKIE_URL)
 
-    def get(self, path):
-        return xmltodict.parse(self.session.get(self.base_url + path).text).get('response', None)
+    def get(self, path, headers=None):
+        return xmltodict.parse(self.session.get(self.base_url + path, headers=headers).text).get('response', None)
 
-    def postSMS(self, path, number, text):
+    def get_request_headers(self):
         SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get(
             'response', None)
-        APIurl = self.base_url + path
+
         if SessionToken is not None:
             Session = SessionToken.get("SesInfo")  # cookie
             Token = SessionToken.get("TokInfo")  # token
@@ -79,20 +79,19 @@ class HuaweiE3372(object):
                 "token")
             headers = {'__RequestVerificationToken': Token,
                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        return headers
 
+    def postSMS(self, path, number, text):
+        headers = self.get_request_headers()
+        APIurl = self.base_url + path
         Length = str(len(text))  # text length
         post_data = "<request><Index>-1</Index><Phones><Phone>" + number + "</Phone></Phones><Sca></Sca><Content>" + text + "</Content><Length>" + Length + "</Length><Reserved>1</Reserved><Date>-1</Date></request>"
         logging.debug(post_data)
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
 
     def postdataswitch(self, path, dataswitch):
-        SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get(
-            'response', None)
+        headers = self.get_request_headers()
         APIurl = self.base_url + path
-        Session = SessionToken.get("SesInfo")  # cookie
-        Token = SessionToken.get("TokInfo")  # token
-        headers = {'Cookie': Session, '__RequestVerificationToken': Token,
-                   "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
         post_data = "<request><dataswitch>" + dataswitch + "</dataswitch>"
         print post_data
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
@@ -138,6 +137,18 @@ def sendsms():
         return "Message status: %s" % test
     except:
         logger.error("Send Message failed")
+        return "Unknown error"
+
+
+@app.route('/sms', methods=['GET'])  # get messages
+def getsmses():
+    try:
+        e3372 = HuaweiE3372()
+        path_data = e3372.get("/sms/sms-list", headers=e3372.get_request_headers())
+        logger.info("Get sms-list successful")
+        return jsonify(path_data)
+    except:
+        logger.exception("Get sms-list failed")
         return "Unknown error"
 
 
