@@ -120,7 +120,7 @@ def sendsms():
         logger.info("Sent Message")
         return "Message status: %s" %test
     except: 
-        logger.error("Send Message failed")  
+        logger.exception("Send Message failed")
         return "Unknown error"
 
 @app.route('/dataswitch', methods=['POST']) # mobile data on or off using POST 
