@@ -97,10 +97,20 @@ class HuaweiE3372(object):
         logging.debug(post_data)
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
 
-    def postSMSlist(self, path):
+    def postSMSlist(self, path, max_count=50, ascending_sort=False):
+
+        if max_count > 50:
+            max_count = 50
+
+        if max_count < 0:
+            max_count = 1
+        ascending = 0
+        if ascending_sort:
+            ascending = 1
+
         headers = self.get_request_headers(content_type="text/xml")
         APIurl = self.base_url + path
-        post_data = "<request><PageIndex>1</PageIndex><ReadCount>100</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>1</UnreadPreferred></request>"
+        post_data = "<request><PageIndex>1</PageIndex><ReadCount>"+str(max_count)+"</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>"+str(ascending)+"</Ascending><UnreadPreferred>1</UnreadPreferred></request>"
         logging.debug(post_data)
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
 
@@ -157,9 +167,12 @@ def sendsms():
 
 @app.route('/sms', methods=['GET'])  # get messages
 def getsmses():
+    max_count = int(request.args.get("max_count"))
+    ascending = bool(request.args.get("ascending_sort"))
+
     try:
         e3372 = HuaweiE3372()
-        path_data = e3372.postSMSlist("/api/sms/sms-list").get('response', {}).get('Messages', {})
+        path_data = e3372.postSMSlist("/api/sms/sms-list", max_count=max_count, ascending_sort=ascending).get('response', {}).get('Messages', {})
         logger.info("Get /api/sms/sms-list called")
         logger.info("result:\n%s" % path_data)
         return jsonify(path_data)
