@@ -167,8 +167,14 @@ def sendsms():
 
 @app.route('/sms', methods=['GET'])  # get messages
 def getsmses():
-    max_count = int(request.args.get("max_count"))
-    ascending = bool(request.args.get("ascending_sort"))
+    if request.args.get("max_count") is not None:
+        max_count = int(request.args.get("max_count"))
+    else:
+        max_count = 50
+    if request.args.get("ascending_sort") is not None:
+        ascending = bool(request.args.get("ascending_sort"))
+    else:
+        ascending = False
 
     try:
         e3372 = HuaweiE3372()
