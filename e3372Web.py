@@ -159,7 +159,7 @@ def sendsms():
 def getsmses():
     try:
         e3372 = HuaweiE3372()
-        path_data = e3372.postSMSlist("/api/sms/sms-list")
+        path_data = e3372.postSMSlist("/api/sms/sms-list").get('response', {}).get('Messages', {}).get('Message', [])
         logger.info("Get /api/sms/sms-list called")
         logger.info("result:\n%s" % path_data)
         return jsonify(path_data)
