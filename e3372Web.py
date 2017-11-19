@@ -68,23 +68,25 @@ class HuaweiE3372(object):
         except:
             logger.exception("could not parse:\n%s" % self.session.get(self.base_url + path, headers=headers).text)
 
-    def get_request_headers(self):
+    def get_request_headers(self, request_type="post"):
         SessionToken = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/SesTokInfo").text).get(
             'response', None)
+
+        content_type = "text/xml"
+        if request_type == "post":
+            content_type = "application/x-www-form-urlencoded; charset=UTF-8"
 
         if SessionToken is not None:
             logger.info("using SessionToken")
             Session = SessionToken.get("SesInfo")  # cookie
             Token = SessionToken.get("TokInfo")  # token
-            headers = {'Cookie': Session, '__RequestVerificationToken': Token,
-                       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+            headers = {'Cookie': Session, '__RequestVerificationToken': Token, "Content-Type": content_type}
         else:
             logger.info("using token only")
             Token = xmltodict.parse(self.session.get(self.base_url + "/api/webserver/token").text).get('response',
                                                                                                        None).get(
                 "token")
-            headers = {'__RequestVerificationToken': Token,
-                       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+            headers = {'__RequestVerificationToken': Token, "Content-Type": content_type}
         logger.info("returning headers:%s" % headers)
         return headers
 
@@ -151,7 +153,7 @@ def sendsms():
 def getsmses():
     try:
         e3372 = HuaweiE3372()
-        path_data = e3372.get("/api/sms/sms-list", headers=e3372.get_request_headers())
+        path_data = e3372.get("/api/sms/sms-list", headers=e3372.get_request_headers(request_type="get"))
         logger.info("Get /api/sms/sms-list called")
         logger.info("result:\n%s" % path_data)
         return jsonify(path_data)
