@@ -148,7 +148,8 @@ def getsmses():
     try:
         e3372 = HuaweiE3372()
         path_data = e3372.get("/api/sms/sms-list", headers=e3372.get_request_headers())
-        logger.info("Get sms-list successful")
+        logger.info("Get /api/sms/sms-list called")
+        logger.info("result:\n%s" % path_data)
         return jsonify(path_data)
     except:
         logger.exception("Get sms-list failed")
