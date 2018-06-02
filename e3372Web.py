@@ -10,9 +10,10 @@ import time
 import logging
 import traceback
 from logging.handlers import RotatingFileHandler
+from decorators import socket_timeout
 
 logger = logging.getLogger('my_logger')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 handler = RotatingFileHandler('logs/configlog.log', maxBytes=2000, backupCount=5)
 # create a logging format
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -132,6 +133,7 @@ def mainpage():
 
 
 @app.route('/getdata', methods=['GET'])  # API data return as json
+@socket_timeout(10)
 def getAPIdata():
     try:
         e3372 = HuaweiE3372()
@@ -150,6 +152,7 @@ def getAPIdata():
 
 
 @app.route('/sendsms', methods=['POST'])  # send Message using POST
+@socket_timeout(10)
 def sendsms():
     jsonData = request.data
     dataDict = json.loads(jsonData)
@@ -166,6 +169,7 @@ def sendsms():
 
 
 @app.route('/smslist', methods=['GET'])  # get messages
+@socket_timeout(10)
 def getsmses():
     max_count = 50
     if request.args.get("max_count") is not None:
