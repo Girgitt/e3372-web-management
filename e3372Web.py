@@ -97,6 +97,13 @@ class HuaweiE3372(object):
         post_data = "<request><Index>-1</Index><Phones><Phone>" + number + "</Phone></Phones><Sca></Sca><Content>" + text + "</Content><Length>" + Length + "</Length><Reserved>1</Reserved><Date>-1</Date></request>"
         logging.debug(post_data)
         return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
+    
+    def postSMSdelete(self, path, sms_id):
+        headers = self.get_request_headers()
+        APIurl = self.base_url + path
+        post_data = "<request><Index>" + sms_id + "</Index></request>"
+        logging.debug(post_data)
+        return xmltodict.parse(self.session.post(url=APIurl, data=post_data, headers=headers).text)
 
     def postSMSlist(self, path, max_count=50, ascending_sort=False, inbox='received'):
 
@@ -175,6 +182,22 @@ def sendsms():
     except:
         logger.error("Send Message failed")
         return "Unknown error"
+
+
+@app.route('/deletesms', methods=['POST'])  # delete Message by index using POST
+@socket_timeout(10)
+def deletesms():
+    jsonData = request.data
+    dataDict = json.loads(jsonData)
+    try:
+        e3372 = HuaweiE3372()
+        sms_id = dataDict['sms_id']
+        result = e3372.postSMSdelete("/api/sms/delete-sms", sms_id).get('response')
+        logger.info("Message deleted: %s" % sms_id)
+        return "Message delete status: %s" % result
+    except Exception as e:
+        logger.error("Message delete failed")
+        return "Unhandled exception: %s" % e.message
 
 
 @app.route('/smslist', methods=['GET'])  # get messages
